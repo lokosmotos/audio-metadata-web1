@@ -1,28 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Audio Metadata Extractor</title>
   <style>
-    body { font-family: Arial; margin: 2rem; }
-    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-    th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
-    th { background-color: #f2f2f2; }
-    input[type=file] { margin-bottom: 1rem; }
-    button { margin-right: 10px; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8f9fa;
+      padding: 2rem;
+      color: #333;
+    }
+
+    h2 {
+      color: #004085;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      margin: 5px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      font-size: 13px;
+    }
+
+    th {
+      background-color: #e9ecef;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
   <h2>Upload Audio Files to Extract Metadata</h2>
   <input type="file" id="audioFiles" multiple accept=".mp3,.wav,.flac,.m4a">
-  <button onclick="uploadFiles()">Extract</button>
+  <br>
+  <button onclick="uploadFiles()">Extract Metadata</button>
   <button onclick="downloadExcel()">Download Excel</button>
 
   <table id="metadataTable">
     <thead>
       <tr>
         <th>File Name</th>
-        <th>Duration (s)</th>
+        <th>HH:MM:SS</th>
+        <th>MM:SS</th>
+        <th>Seconds</th>
         <th>Sample Rate</th>
         <th>Bitrate</th>
         <th>Channels</th>
@@ -41,7 +87,7 @@
     async function uploadFiles() {
       const input = document.getElementById('audioFiles');
       const files = input.files;
-      if (!files.length) return alert("Select files");
+      if (!files.length) return alert("Please select audio files");
 
       const formData = new FormData();
       for (let file of files) {
@@ -62,7 +108,9 @@
       data.forEach(meta => {
         const row = `<tr>
           <td>${meta.file_name}</td>
-          <td>${meta.duration}</td>
+          <td>${meta.duration_hhmmss}</td>
+          <td>${meta.duration_mmss}</td>
+          <td>${meta.duration_sec}</td>
           <td>${meta.sample_rate}</td>
           <td>${meta.bitrate}</td>
           <td>${meta.channels}</td>
@@ -76,13 +124,11 @@
     }
 
     async function downloadExcel() {
-      if (!lastMetadata.length) return alert("Extract metadata first!");
+      if (!lastMetadata.length) return alert("No metadata to export. Please extract first.");
 
       const res = await fetch("/export_excel", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(lastMetadata)
       });
 

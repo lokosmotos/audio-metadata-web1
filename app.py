@@ -8,14 +8,21 @@ def get_audio_metadata(file_path):
     audio = MutagenFile(file_path, easy=True)
     if not audio or not audio.info:
         return None
+
+    tags = audio.tags or {}
+
     return {
         "file_name": os.path.basename(file_path),
         "duration": round(audio.info.length, 2),
         "sample_rate": getattr(audio.info, 'sample_rate', 'N/A'),
         "bitrate": getattr(audio.info, 'bitrate', 'N/A'),
         "channels": getattr(audio.info, 'channels', 'N/A'),
-        "size_kb": round(os.path.getsize(file_path) / 1024, 2)
+        "size_kb": round(os.path.getsize(file_path) / 1024, 2),
+        "album": tags.get('album', [''])[0],
+        "album_artist": tags.get('albumartist', [''])[0],
+        "track_number": tags.get('tracknumber', [''])[0]
     }
+
 
 @app.route("/")
 def index():

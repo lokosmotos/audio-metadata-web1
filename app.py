@@ -1,7 +1,6 @@
 import os
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file
 from mutagen import File as MutagenFile
-from flask import send_file
 import pandas as pd
 
 app = Flask(__name__)
@@ -25,7 +24,6 @@ def get_audio_metadata(file_path):
         "track_number": tags.get('tracknumber', [''])[0]
     }
 
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -42,7 +40,7 @@ def upload_files():
         meta = get_audio_metadata(filepath)
         if meta:
             results.append(meta)
-        os.remove(filepath)  # cleanup
+        os.remove(filepath)
 
     return jsonify(results)
 
@@ -50,9 +48,8 @@ def upload_files():
 def export_excel():
     data = request.json
     df = pd.DataFrame(data)
-    output_path = "metadata_export.xlsx"
+    output_path = "audio_metadata.xlsx"
     df.to_excel(output_path, index=False)
-
     return send_file(output_path, as_attachment=True)
 
 if __name__ == "__main__":

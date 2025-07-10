@@ -1,59 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Audio Metadata Viewer</title>
-    <style>
-        body { font-family: Arial; margin: 2rem; }
-        table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Audio Metadata Extractor</title>
+  <style>
+    body { font-family: Arial; margin: 2rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+    th { background-color: #f2f2f2; }
+    input[type=file] { margin-bottom: 1rem; }
+  </style>
 </head>
 <body>
-    <h2>Upload Audio Files</h2>
-    <input type="file" id="audioFiles" multiple>
-    <button onclick="uploadFiles()">Generate Metadata</button>
+  <h2>Upload Audio Files to Extract Metadata</h2>
+  <input type="file" id="audioFiles" multiple accept=".mp3,.wav,.flac,.m4a">
+  <button onclick="uploadFiles()">Extract</button>
 
-    <table id="resultTable">
-        <thead>
-            <tr>
-                <th>File Name</th><th>Duration (s)</th><th>Sample Rate</th><th>Bitrate</th><th>Channels</th><th>Size (KB)</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+  <table id="metadataTable">
+    <thead>
+      <tr>
+        <th>File Name</th>
+        <th>Duration (s)</th>
+        <th>Sample Rate</th>
+        <th>Bitrate</th>
+        <th>Channels</th>
+        <th>Size (KB)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-    <script>
-        async function uploadFiles() {
-            const input = document.getElementById('audioFiles');
-            const files = input.files;
-            const formData = new FormData();
+  <script>
+    async function uploadFiles() {
+      const input = document.getElementById('audioFiles');
+      const files = input.files;
+      if (!files.length) {
+        alert("Please select audio files.");
+        return;
+      }
 
-            for (let file of files) {
-                formData.append("files", file);
-            }
+      const formData = new FormData();
+      for (let file of files) {
+        formData.append("files", file);
+      }
 
-            const response = await fetch("/upload", {
-                method: "POST",
-                body: formData
-            });
+      const res = await fetch("/upload", {
+        method: "POST",
+        body: formData
+      });
 
-            const data = await response.json();
-            const tbody = document.querySelector("#resultTable tbody");
-            tbody.innerHTML = "";
+      const data = await res.json();
+      const tableBody = document.querySelector("#metadataTable tbody");
+      tableBody.innerHTML = "";
 
-            data.forEach(row => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${row.file_name}</td>
-                        <td>${row.duration}</td>
-                        <td>${row.sample_rate}</td>
-                        <td>${row.bitrate}</td>
-                        <td>${row.channels}</td>
-                        <td>${row.size_kb}</td>
-                    </tr>`;
-            });
-        }
-    </script>
+      data.forEach(meta => {
+        const row = `<tr>
+          <td>${meta.file_name}</td>
+          <td>${meta.duration}</td>
+          <td>${meta.sample_rate}</td>
+          <td>${meta.bitrate}</td>
+          <td>${meta.channels}</td>
+          <td>${meta.size_kb}</td>
+        </tr>`;
+        tableBody.innerHTML += row;
+      });
+    }
+  </script>
 </body>
 </html>
-

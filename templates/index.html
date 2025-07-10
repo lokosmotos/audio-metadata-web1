@@ -9,12 +9,14 @@
     th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
     th { background-color: #f2f2f2; }
     input[type=file] { margin-bottom: 1rem; }
+    button { margin-right: 10px; }
   </style>
 </head>
 <body>
   <h2>Upload Audio Files to Extract Metadata</h2>
   <input type="file" id="audioFiles" multiple accept=".mp3,.wav,.flac,.m4a">
   <button onclick="uploadFiles()">Extract</button>
+  <button onclick="downloadExcel()">Download Excel</button>
 
   <table id="metadataTable">
     <thead>
@@ -25,19 +27,21 @@
         <th>Bitrate</th>
         <th>Channels</th>
         <th>Size (KB)</th>
+        <th>Album</th>
+        <th>Album Artist</th>
+        <th>Track #</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <script>
+    let lastMetadata = [];
+
     async function uploadFiles() {
       const input = document.getElementById('audioFiles');
       const files = input.files;
-      if (!files.length) {
-        alert("Please select audio files.");
-        return;
-      }
+      if (!files.length) return alert("Select files");
 
       const formData = new FormData();
       for (let file of files) {
@@ -50,6 +54,8 @@
       });
 
       const data = await res.json();
+      lastMetadata = data;
+
       const tableBody = document.querySelector("#metadataTable tbody");
       tableBody.innerHTML = "";
 
@@ -61,9 +67,32 @@
           <td>${meta.bitrate}</td>
           <td>${meta.channels}</td>
           <td>${meta.size_kb}</td>
+          <td>${meta.album || ''}</td>
+          <td>${meta.album_artist || ''}</td>
+          <td>${meta.track_number || ''}</td>
         </tr>`;
         tableBody.innerHTML += row;
       });
+    }
+
+    async function downloadExcel() {
+      if (!lastMetadata.length) return alert("Extract metadata first!");
+
+      const res = await fetch("/export_excel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(lastMetadata)
+      });
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "audio_metadata.xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
     }
   </script>
 </body>

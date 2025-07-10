@@ -1,9 +1,6 @@
 services:
   - type: web
-    name: audio-metadata-web
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
-    envVars:
-      - key: FLASK_ENV
-        value: production
+    name: audio-meta-app
+    env: python
+    buildCommand: ""
+    startCommand: gunicorn app:app

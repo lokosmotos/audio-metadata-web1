@@ -1,7 +1,8 @@
 import os
+import io
+import xlsxwriter
 from flask import Flask, request, jsonify, render_template, send_file
 from mutagen import File as MutagenFile
-import pandas as pd
 
 app = Flask(__name__)
 
@@ -11,7 +12,6 @@ def get_audio_metadata(file_path):
         return None
 
     tags = audio.tags or {}
-
     duration_sec = round(audio.info.length, 2)
 
     def format_hhmmss(seconds):
@@ -62,10 +62,24 @@ def upload_files():
 @app.route("/export_excel", methods=["POST"])
 def export_excel():
     data = request.json
-    df = pd.DataFrame(data)
-    output_path = "audio_metadata.xlsx"
-    df.to_excel(output_path, index=False)
-    return send_file(output_path, as_attachment=True)
+
+    # Create an in-memory Excel file
+    output = io.BytesIO()
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Audio Metadata")
+
+    headers = list(data[0].keys()) if data else []
+    for col, header in enumerate(headers):
+        worksheet.write(0, col, header)
+
+    for row_idx, item in enumerate(data, start=1):
+        for col_idx, key in enumerate(headers):
+            worksheet.write(row_idx, col_idx, item.get(key, ''))
+
+    workbook.close()
+    output.seek(0)
+
+    return send_file(output, as_attachment=True, download_name="audio_metadata.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

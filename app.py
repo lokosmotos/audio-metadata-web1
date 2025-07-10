@@ -1,6 +1,8 @@
 import os
 from flask import Flask, request, jsonify, render_template
 from mutagen import File as MutagenFile
+from flask import send_file
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -43,6 +45,15 @@ def upload_files():
         os.remove(filepath)  # cleanup
 
     return jsonify(results)
+
+@app.route("/export_excel", methods=["POST"])
+def export_excel():
+    data = request.json
+    df = pd.DataFrame(data)
+    output_path = "metadata_export.xlsx"
+    df.to_excel(output_path, index=False)
+
+    return send_file(output_path, as_attachment=True)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

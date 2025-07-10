@@ -1,1 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Metadata Viewer</title>
+    <style>
+        body { font-family: Arial; margin: 2rem; }
+        table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h2>Upload Audio Files</h2>
+    <input type="file" id="audioFiles" multiple>
+    <button onclick="uploadFiles()">Generate Metadata</button>
+
+    <table id="resultTable">
+        <thead>
+            <tr>
+                <th>File Name</th><th>Duration (s)</th><th>Sample Rate</th><th>Bitrate</th><th>Channels</th><th>Size (KB)</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        async function uploadFiles() {
+            const input = document.getElementById('audioFiles');
+            const files = input.files;
+            const formData = new FormData();
+
+            for (let file of files) {
+                formData.append("files", file);
+            }
+
+            const response = await fetch("/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            const tbody = document.querySelector("#resultTable tbody");
+            tbody.innerHTML = "";
+
+            data.forEach(row => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${row.file_name}</td>
+                        <td>${row.duration}</td>
+                        <td>${row.sample_rate}</td>
+                        <td>${row.bitrate}</td>
+                        <td>${row.channels}</td>
+                        <td>${row.size_kb}</td>
+                    </tr>`;
+            });
+        }
+    </script>
+</body>
+</html>
 

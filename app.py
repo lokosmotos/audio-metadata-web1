@@ -12,9 +12,24 @@ def get_audio_metadata(file_path):
 
     tags = audio.tags or {}
 
+    duration_sec = round(audio.info.length, 2)
+
+    def format_hhmmss(seconds):
+        h = int(seconds // 3600)
+        m = int((seconds % 3600) // 60)
+        s = int(seconds % 60)
+        return f"{h:02}:{m:02}:{s:02}"
+
+    def format_mmss(seconds):
+        m = int(seconds // 60)
+        s = int(seconds % 60)
+        return f"{m}:{s:02}"
+
     return {
         "file_name": os.path.basename(file_path),
-        "duration": round(audio.info.length, 2),
+        "duration_hhmmss": format_hhmmss(duration_sec),
+        "duration_mmss": format_mmss(duration_sec),
+        "duration_sec": duration_sec,
         "sample_rate": getattr(audio.info, 'sample_rate', 'N/A'),
         "bitrate": getattr(audio.info, 'bitrate', 'N/A'),
         "channels": getattr(audio.info, 'channels', 'N/A'),
